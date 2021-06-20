@@ -1,10 +1,18 @@
 <template>
   <div class="login-container">
     <div class="title-container">
-      <h3 class="title">微信扫码登录</h3>
+      <h3 class="title-top">微信机器人 管理后台</h3>
+      <h5 class="title">微信扫码登录</h5>
     </div>
     <div class="qr-code" v-if="qrcode">
-      <img :src="qrcode" alt="" />
+      <div class="qr-warp">
+        <img :src="qrcode" alt="" />
+        <div class="mark" v-if="reload">
+          <el-button @click="getQrcode" type="info"
+            >二维码已过期，刷新</el-button
+          >
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -19,14 +27,11 @@ export default {
       redirect: undefined,
       qrcode: "",
       hasScan: false,
+      reload: false,
     };
   },
   mounted() {
-    getQrcode().then((res) => {
-      const { base64Str, scene } = res;
-      this.qrcode = base64Str;
-      this.checkIsScan(scene);
-    });
+    this.getQrcode();
   },
   watch: {
     $route: {
@@ -37,7 +42,16 @@ export default {
     },
   },
   methods: {
+    getQrcode() {
+      getQrcode().then((res) => {
+        const { base64Str, scene } = res;
+        this.reload = false;
+        this.qrcode = base64Str;
+        this.checkIsScan(scene);
+      });
+    },
     checkIsScan(scene) {
+      const startTime = Date.now();
       if (this.hasScan) {
         clearInterval(this.timer);
         this.timer = null;
@@ -45,7 +59,12 @@ export default {
         this.timer = setInterval(() => {
           checkScene({ scene }).then((res) => {
             console.log(res, "---");
-
+            const curTime = Date.now();
+            if (curTime - startTime > 60 * 1000) {
+              clearInterval(this.timer);
+              this.timer = null;
+              this.reload = true;
+            }
             const { hasScan, token } = res;
             if (hasScan) {
               clearInterval(this.timer);
@@ -56,7 +75,7 @@ export default {
             }
             this.hasScan = hasScan;
           });
-        }, 5000);
+        }, 3000);
       }
     },
     handleLogin() {
@@ -129,18 +148,23 @@ $light_gray: #eee;
 .login-container {
   min-height: 100%;
   width: 100%;
-  background-color: $bg;
+  background: url("../../assets/images/loginBg.svg");
   overflow: hidden;
 
   .title-container {
     position: relative;
-
-    .title {
-      font-size: 26px;
-      color: $light_gray;
-      margin: 100px auto 40px;
+    .title-top {
+      font-size: 32px;
+      color: $bg;
+      margin: 100px auto 0;
       text-align: center;
       font-weight: bold;
+    }
+    .title {
+      font-size: 26px;
+      color: $bg;
+      margin: 10px auto 40px;
+      text-align: center;
     }
   }
   .qr-code {
@@ -148,9 +172,26 @@ $light_gray: #eee;
     justify-content: center;
     align-items: center;
     background: #fff;
-    img {
+    .qr-warp {
+      position: relative;
       width: 200px;
       height: 200px;
+      img {
+        width: 200px;
+        height: 200px;
+      }
+      .mark {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 100;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
     }
   }
 }
