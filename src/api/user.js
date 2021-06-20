@@ -10,7 +10,7 @@ export function login(data) {
 
 export function getInfo() {
   return request({
-    url: "http://localhost:3000/user/info",
+    url: "http://www.moluoyingxiong.tech/bot-server/user/info",
     method: "get"
   });
 }
