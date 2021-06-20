@@ -10,7 +10,7 @@ export function login(data) {
 
 export function getInfo() {
   return request({
-    url: "http://www.moluoyingxiong.tech/bot-server/user/info",
+    url: "https://www.moluoyingxiong.tech/bot-server/user/info",
     method: "get"
   });
 }
