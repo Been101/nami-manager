@@ -53,24 +53,32 @@ export default {
   },
   methods: {
     getBotNum() {
-      getBotNum().then((res) => {
+      return getBotNum().then((res) => {
         const { botNum } = res.data;
         this.botNum = botNum;
         this.botNumTip = `当前活跃机器人${botNum}个。`;
+        return res.data;
       });
     },
-    genBot() {
+    async genBot() {
       this.loading = true;
-      if (this.botNum >= 10) {
-        this.botNumTip = `已达到最多机器人存活个数（10个），请等别人退出机器人后再重试。`;
-      } else {
-        getBotQrCode().then((res) => {
-          const { qrcodeImageUrl } = res.data;
-          this.botQrCode = qrcodeImageUrl;
+      this.getBotNum()
+        .then(({ botNum }) => {
+          this.botNum = botNum;
+          if (this.botNum >= 10) {
+            this.botNumTip = `已达到最多机器人存活个数（10个），请等别人退出机器人后再重试。`;
+          } else {
+            return getBotQrCode().then((res) => {
+              const { qrcodeImageUrl } = res.data;
+              this.botQrCode = qrcodeImageUrl;
+              this.loading = false;
+              this.botNumTip = `前面已经有${this.botNum}个机器人，最多能同时存在10个机器人。`;
+            });
+          }
+        })
+        .finally(() => {
           this.loading = false;
-          this.botNumTip = `前面已经有${this.botNum}个机器人，最多能同时存在10个机器人。`;
         });
-      }
     },
   },
 };
